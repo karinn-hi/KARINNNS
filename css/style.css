@@ -1,3 +1,93 @@
+/* Resaltar pestaña activa y botones seleccionados */
+.tabitem.selected, .contain .tabs .tabitem.selected {
+  background: #4f8cff !important;
+  color: #c4c7c9 !important;
+  box-shadow: 0 2px 8px #0002;
+  border: 1.5px solid #357ae8 !important;
+}
+
+button.selected, .refresh_button.selected {
+  background: #357ae8 !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 8px #0002;
+}
+
+/* Para radios y checkboxes seleccionados */
+input[type="radio"]:checked, input[type="checkbox"]:checked {
+  outline: 2px solid #4f8cff !important;
+  box-shadow: 0 0 0 2px #4f8cff33;
+}
+/* Paleta amigable: fondo gris suave, acentos azules y verdes, textos oscuros */
+body, .gradio-container {
+  background-color: #939aa0 !important; /* Gris muy claro */
+  color: #ffffff !important; /* Texto principal oscuro */
+}
+
+button, .refresh_button {
+  background: #4f8cff !important; /* Azul amigable */
+  color: #fff !important;
+  border-radius: 8px !important;
+  border: none !important;
+  box-shadow: 0 2px 8px #0001;
+  transition: background 0.2s;
+}
+button:hover, .refresh_button:hover {
+  background: #357ae8 !important;
+}
+
+input, textarea, select, .gradio-container input, .gradio-container textarea {
+  background: #e9ecef !important;
+  color: #222 !important;
+  border-radius: 6px !important;
+  border: 1px solid #cfd8dc !important;
+}
+
+.tabitem, .contain .tabs {
+  background: #f4f6f8 !important;
+  border-radius: 10px !important;
+  box-shadow: 0 1px 6px #0001;
+}
+
+.main_view, .image_gallery, .gallery {
+  background: #e9ecef !important;
+  border-radius: 10px !important;
+}
+
+.gradio-container input[type="range"] {
+  accent-color: #4f8cff;
+}
+
+input[type="checkbox"], input[type="radio"] {
+  accent-color: #43b581;
+}
+
+progress {
+  background-color: #e9ecef !important;
+}
+progress::-webkit-progress-value {
+  background-color: #43b581 !important; /* Verde amigable */
+}
+progress::-moz-progress-bar {
+  background-color: #43b581 !important;
+}
+
+.canvas-tooltip-content {
+  background-color: #f4f6f8 !important;
+  color: #222 !important;
+  border: 1px solid #cfd8dc !important;
+}
+
+#lightboxModal {
+  background-color: rgba(44, 62, 80, 0.95) !important;
+}
+
+.loader-container > span, .progress-bar span {
+  color: #357ae8 !important;
+}
+
+.tabitem, .main_view, .gallery, .image_gallery {
+  border: 1px solid #cfd8dc !important;
+}
 /* based on https://github.com/AUTOMATIC1111/stable-diffusion-webui/blob/v1.6.0/style.css */
 
 .loader-container {

@@ -337,6 +337,7 @@ with shared.gradio_root:
                             with gr.Column():
                                 describe_input_image = grh.Image(label='Image', source='upload', type='numpy', show_label=False)
                             with gr.Column():
+                                describe_prefix_text = gr.Textbox(label='Prefijo para la Descripción (opcional)', placeholder='Ej: vtuber, masterpiece, best quality...', lines=2)
                                 describe_methods = gr.CheckboxGroup(
                                     label='Content Type',
                                     choices=flags.describe_types,
@@ -344,6 +345,7 @@ with shared.gradio_root:
                                 describe_apply_styles = gr.Checkbox(label='Apply Styles', value=modules.config.default_describe_apply_prompts_checkbox)
                                 describe_btn = gr.Button(value='Describe this Image into Prompt')
                                 describe_image_size = gr.Textbox(label='Image Size and Recommended Size', elem_id='describe_image_size', visible=False)
+                                describe_tags_list = gr.HTML(label='Tags detectados', visible=True)
                                 gr.HTML('<a href="https://github.com/lllyasviel/Fooocus/discussions/1363" target="_blank">\U0001F4D4 Documentation</a>')
 
                                 def trigger_show_image_properties(image):
@@ -1061,7 +1063,7 @@ with shared.gradio_root:
                 gr.Audio(interactive=False, value=notification_file, elem_id='audio_notification', visible=False)
                 break
 
-        def trigger_describe(modes, img, apply_styles):
+        def trigger_describe(prefix, modes, img, apply_styles, negative_prompts):
             describe_prompts = []
             styles = set()
 
@@ -1080,15 +1082,46 @@ with shared.gradio_root:
             else:
                 styles = list(styles)
 
+            # Filtrar solo las palabras negativas dentro del prompt
             if len(describe_prompts) == 0:
                 describe_prompt = gr.update()
+                tags_html = gr.update()
             else:
-                describe_prompt = ', '.join(describe_prompts)
+                generated_description = ', '.join(describe_prompts)
+                filtered = generated_description
+                if negative_prompts and negative_prompts.strip():
+                    negatives = [n.strip().lower() for n in negative_prompts.split(',')]
+                    def remove_negatives(text):
+                        words = [w.strip() for w in text.split()]
+                        filtered_words = [w for w in words if all(n not in w.lower() for n in negatives)]
+                        return ' '.join(filtered_words)
+                    filtered_list = [remove_negatives(p).strip() for p in generated_description.split(',')]
+                    filtered_candidate = ', '.join([f for f in filtered_list if f])
+                    if filtered_candidate:
+                        filtered = filtered_candidate
+                if prefix and prefix.strip():
+                    describe_prompt = f"{prefix.strip()}, {filtered}"
+                else:
+                    describe_prompt = filtered
 
-            return describe_prompt, styles
+                # Generar HTML interactivo para los tags
+                tags = [t.strip() for t in filtered.split(',') if t.strip()]
+                tag_colors = ['#43b581', '#4f8cff', '#f39c12', '#e74c3c', '#8e44ad', '#16a085']
+                html_tags = []
+                for i, tag in enumerate(tags):
+                    color = tag_colors[i % len(tag_colors)]
+                    html_tags.append(f'<span style="display:inline-block;margin:3px 6px;padding:6px 14px;border-radius:16px;background:{color};color:#fff;font-weight:500;cursor:pointer;" onclick="navigator.clipboard.writeText(\'{tag}\')">{tag} <span style=\"font-size:12px;opacity:0.7;\">&#128203;</span></span>')
+                tags_html = gr.update(value='<div style="margin-top:8px;">' + ''.join(html_tags) + '</div>')
 
-        describe_btn.click(trigger_describe, inputs=[describe_methods, describe_input_image, describe_apply_styles],
-                           outputs=[prompt, style_selections], show_progress=True, queue=True) \
+            return describe_prompt, styles, tags_html
+
+        # Nueva interfaz para prompts negativos
+        with gr.Tab(label='Prompts Negativos', id='negative_prompt_tab') as negative_prompt_tab:
+            with gr.Row():
+                negative_prompts_text = gr.Textbox(label='Prompts Negativos', placeholder='Ejemplo: eyes, hair, mouth', lines=2)
+
+        describe_btn.click(trigger_describe, inputs=[describe_prefix_text, describe_methods, describe_input_image, describe_apply_styles, negative_prompts_text],
+                           outputs=[prompt, style_selections, describe_tags_list], show_progress=True, queue=True) \
             .then(fn=style_sorter.sort_styles, inputs=style_selections, outputs=style_selections, queue=False, show_progress=False) \
             .then(lambda: None, _js='()=>{refresh_style_localization();}')
 
@@ -1097,6 +1130,9 @@ with shared.gradio_root:
                 # keep prompt if not empty
                 if prompt == '':
                     return trigger_describe(mode, img, apply_styles)
+                return new_func()
+            
+            def new_func():
                 return gr.update(), gr.update()
 
             uov_input_image.upload(trigger_auto_describe, inputs=[describe_methods, uov_input_image, prompt, describe_apply_styles],
